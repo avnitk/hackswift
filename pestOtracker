@@ -1,0 +1,51 @@
+int motionPin = 8;   //IR sensor connection to arduino board
+int sensorPin = 7;   //Acoustic sensor connection to ardunio board
+float sensorValue = 0.0;
+int motion_is_present = 0;
+float sensorValueAvg = 0.0;
+float sensorValueTotal = 0.0;
+int sensorValueCount = 0;
+int buzzerPin = 9;    //Piezo electric buzzer connection to ardunio board
+
+void setup()
+{
+  // initialize the IO pins on the arduino board
+  pinMode(motionPin, INPUT);
+  pinMode(sensorPin, INPUT);
+  pinMode(buzzerPin, OUTPUT);
+  Serial.begin(9600);
+  Serial.println("Starting Pest Detection");
+}
+
+void loop()
+{
+  // switch off the buzzer
+  digitalWrite(buzzerPin, 0);
+
+  // read the acoustic sensor
+  sensorValue = analogRead(sensorPin);
+  sensorValue = (sensorValue * 5)/1023;
+  
+  sensorValueCount++;
+  sensorValueTotal += sensorValue;
+  sensorValueAvg = sensorValueTotal/sensorValueCount;
+
+  // read the IR sensor
+  if (digitalRead(motionPin))
+    motion_is_present++;
+
+  // pests are present if the following condition is met
+  if((motion_is_present > 5) && (sensorValueAvg > 1))
+  {
+    digitalWrite(buzzerPin, 1);
+    Serial.println("Pests are present");
+    sensorValueAvg = 0.0;
+    sensorValueCount = 0;
+    sensorValueTotal = 0.0;
+    motion_is_present = 0;
+
+    delay(2000);
+  }
+
+  delay(1000);
+}
